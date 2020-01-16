@@ -51,26 +51,39 @@
 						</div>
 					</div>
 					<br>
+					<hr>
 					<p class="subtitle has-text-centered">Coloque um valor</p>
-					<div class="field">
-						<label class="label">k€ Brutos por ano</label>
-						<div class="control">
-							<input class="input is-rounded" type="text" placeholder="Coloque um valor em k euros" id="gross" maxlength="6" oninput="calculateIncomeNet()">
-						</div>
-					</div>
 					
-					<div class="field">
-						<label class="label">€ Liquidos por mês</label>
-						<div class="control">
-							<input class="input is-rounded" type="tel" placeholder="Coloque um valor em euros" id="net" maxlength="6" oninput="calculateIncomeGross()">
+						<div class="field is-horizontal has-text-centered">
+							
+							<div class="field-body">
+								<div class="field">
+									<label class="label">€ Brutos por ano</label>
+									<div class="control has-text-centered">
+										<input class="input is-rounded" style="width:6.5em;" type="number" placeholder="€" id="gross"  min="0" max="360000" maxlength="6" oninput="calculateIncomeNet()">
+									</div>
+								</div>
+								<div class="field">
+									<label class="label">€ Liquidos por mês</label>
+									<div class="control has-text-centered">
+										<input class="input is-rounded" style="width:6em;" type="number" placeholder="€" id="net"   min="0" max="26000" maxlength="5" oninput="calculateIncomeGross()">
+									</div>
+								</div>
+							</div>
 						</div>
-					</div>
-					
+						<div class="field">
+							<div class="control">
+								<input class="input is-static is-readonly has-text-centered" id="grossAuxValues">
+								</input>
+							</div>
+						</div>
+					<br>
+					<hr>
 					<p class="subtitle has-text-centered">Ou use um dos sliders para calcular</p>
 					
-					<p>k€ Brutos por ano</p>
+					<p>€ Brutos por ano</p>
 					
-					<input id="sliderWithValueGross" class="slider has-output is-fullwidth" min="0" max="360" value="0" step="0.5" type="range">
+					<input id="sliderWithValueGross" class="slider has-output is-fullwidth" min="0" max="360000" value="0" step="100" type="range">
 					<output for="sliderWithValueGross" id="sliderOutputGross" style="padding-left: 0px;padding-right: 0px;">0</output>
 					
 					
@@ -96,44 +109,56 @@
 		function calculateIncomeNet(){
 			//get months and gross value
 			months = document.querySelector('input[name="months"]:checked').value;
-			const yearGrossValue = 1000 * (document.getElementById('gross').value) || 0;
+			const yearGrossValue = (document.getElementById('gross').value) || 0;
 			
 			//update gross slider
-			document.getElementById('sliderWithValueGross').value = yearGrossValue/1000;
-			document.getElementById('sliderOutputGross').textContent = yearGrossValue/1000;
+			document.getElementById('sliderWithValueGross').value = yearGrossValue;
+			document.getElementById('sliderOutputGross').textContent = yearGrossValue;
 			
 			//calculate taxes 
 			const monthGross = yearGrossValue / months;
 			const index = until.findIndex(e => e-monthGross >= 0);
 			const calculatedTax = varTax[index];
-
+			
 			//calculate month value and display it
-			const monthNet = monthGross - (monthGross*calculatedTax) - (monthGross*fixedTax); 
-			document.getElementById('net').value = Math.round(monthNet);
+			const monthNet = Math.round(monthGross - (monthGross*calculatedTax) - (monthGross*fixedTax)); 
+			document.getElementById('net').value = monthNet;
+			
+			//display auxiliar values
+			document.getElementById('grossAuxValues').value = Math.round(monthGross) + '€ brutos corresponde a ' + Math.round((calculatedTax*100)*100)/100 + '% IRS e a 11% SS';
 			
 			//update net slider
-			document.getElementById('sliderWithValueNet').value = Math.round(monthNet);
-			document.getElementById('sliderOutputNet').textContent = Math.round(monthNet);
+			document.getElementById('sliderWithValueNet').value = monthNet;
+			document.getElementById('sliderOutputNet').textContent = monthNet;
 		}
 		
 		function calculateIncomeGross(){
+			//get months and net value
 			months = document.querySelector('input[name="months"]:checked').value;
 			console.log(months);
-			const monthNetValue = document.getElementById('gross').value || 0;
+			const monthNetValue = parseInt(document.getElementById('net').value) || 0;
 			console.log(monthNetValue);
 			
-			const slider = document.getElementById('sliderWithValueNet');
-			slider.value = monthNetValue;
-			const sliderOutputNet = document.getElementById('sliderOutputNet');
-			sliderOutputNet.textContent = monthNetValue; 
+			//update gross slider
+			document.getElementById('sliderWithValueNet').value = monthNetValue;
+			document.getElementById('sliderOutputNet').textContent = monthNetValue; 
 			
-			const monthNet = monthNetValue + (monthGross*calculatedTax) - (monthGross*fixedTax);;
-			const index = until.findIndex(e => e-monthGross >= 0);
-			const calculatedTax = varTax[index];
-			console.log(calculatedTax);
-			const yearGross = monthGross * months; 
-			console.log(monthNet);
-			document.getElementById('gross').value = Math.round(yearGross);
+			//calculate taxes
+			let monthGrossValue = 0;
+			if(monthNetValue < 654){
+				calculatedTax = 0;
+				monthGrossValue = monthNetValue + (monthNetValue*fixedTax);
+				console.log(monthNetValue*fixedTax);
+				
+			}
+			else{
+				//index = until.findIndex(e => e-monthGross >= 0);
+				//monthGrossValue = monthNetValue + (monthNetValue*calculatedTax) + (monthNetValue*fixedTax);
+			
+			}
+			const yearGross = monthGrossValue * months; 
+			console.log(monthGrossValue);
+			document.getElementById('gross').value = yearGross;
 		}
 		
 		
