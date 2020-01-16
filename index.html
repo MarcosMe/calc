@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Calculadora salário bruto e liquido</title>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma-extensions@4.0.0/dist/css/bulma-extensions.min.css">
+		<link rel="script" href="https://cdn.jsdelivr.net/npm/bulma-extensions@6.2.7/dist/js/bulma-extensions.min.js">
+		<link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
+	</head>
+	<body style="font-family: 'Roboto', sans-serif;">
+		<br>
+		<div class="columns is-centered is-mobile">
+			<div class="column is-half">
+				<div class="box">
+					<p class="subtitle has-text-centered">Escolha variáveis</p>
+					<div class="control has-text-centered">
+						<label class="radio">
+							<input type="radio" name="months" value="12" onclick="calculateIncomeNet()">
+							12 meses
+						</label>
+						<label class="radio">
+							<input type="radio" name="months" value="14" onclick="calculateIncomeNet()" checked>
+							14 meses
+						</label>
+					</div>
+					<br>
+					<div class="control has-text-centered">
+						<div class="select is-rounded">
+							<select disabled>
+								<option disabled>Estado Civil</option>
+								<option selected="selected">Não casado</option>
+								<option>Casado unico titular</option>
+								<option>Casado dois titulares</option>
+								<option>Não casado - Deficiente</option>
+								<option>Casado unico titular - Deficiente</option>
+								<option>Casado dois titulares - Deficiente</option>
+							</select>
+						</div>
+						
+						<div class="select is-rounded">
+							<select disabled>
+								<option disabled>Número de dependentes</option>
+								<option selected="selected">0 dependentes</option>
+								<option>1 dependente</option>
+								<option>2 dependentes</option>
+								<option>3 dependentes</option>
+								<option>4 dependentes</option>
+								<option>5 ou mais</option>
+							</select>
+						</div>
+					</div>
+					<br>
+					<p class="subtitle has-text-centered">Coloque um valor</p>
+					<div class="field">
+						<label class="label">k€ Brutos por ano</label>
+						<div class="control">
+							<input class="input is-rounded" type="text" placeholder="Coloque um valor em k euros" id="gross" maxlength="6" oninput="calculateIncomeNet()">
+						</div>
+					</div>
+					
+					<div class="field">
+						<label class="label">€ Liquidos por mês</label>
+						<div class="control">
+							<input class="input is-rounded" type="tel" placeholder="Coloque um valor em euros" id="net" maxlength="6" oninput="calculateIncomeGross()">
+						</div>
+					</div>
+					
+					<p class="subtitle has-text-centered">Ou use um dos sliders para calcular</p>
+					
+					<p>k€ Brutos por ano</p>
+					
+					<input id="sliderWithValueGross" class="slider has-output is-fullwidth" min="0" max="360" value="0" step="0.5" type="range">
+					<output for="sliderWithValueGross" id="sliderOutputGross" style="padding-left: 0px;padding-right: 0px;">0</output>
+					
+					
+					<p>€ Líquidos por mês</p>
+					
+					<input id="sliderWithValueNet" class="slider has-output is-fullwidth" min="0" max="25000" value="0" step="10" type="range">
+					<output for="sliderWithValueNet" id="sliderOutputNet" style="padding-left: 0px;padding-right: 0px;">0</output>
+					
+				</div>
+			</div>
+		</div>
+	</body>
+	<script>
+		 
+		let months = 14;
+  
+		const until = [654.00,683.00,715.00,736.00,811.00,919.00,1001.00,1061.00,1139.00,1221.00,1317.00,1419.00,1557.00,1705.00,1864.00,1971.00,2083.00,2211.00,2359.00,2527.00,2758.00,3094.00,3523.00,4105.00,4636.00,5178.00,5862.00,6706.00,7915.00,9531.00,11248.00,18797.00,20160.00,22680.00,25200.00,71428.5];
+
+		const varTax = [0,0.002,0.044,0.074,0.083,0.105,0.117,0.125,0.136,0.146,0.157,0.167,0.178,0.192,0.206,0.216,0.226,0.236,0.246,0.256,0.266,0.279,0.295,0.307,0.325,0.335,0.345,0.365,0.375,0.395,0.405,0.415,0.425,0.433,0.443,0.453]
+		
+		const fixedTax = 0.11;
+  
+		function calculateIncomeNet(){
+			//get months and gross value
+			months = document.querySelector('input[name="months"]:checked').value;
+			const yearGrossValue = 1000 * (document.getElementById('gross').value) || 0;
+			
+			//update gross slider
+			document.getElementById('sliderWithValueGross').value = yearGrossValue/1000;
+			document.getElementById('sliderOutputGross').textContent = yearGrossValue/1000;
+			
+			//calculate taxes 
+			const monthGross = yearGrossValue / months;
+			const index = until.findIndex(e => e-monthGross >= 0);
+			const calculatedTax = varTax[index];
+
+			//calculate month value and display it
+			const monthNet = monthGross - (monthGross*calculatedTax) - (monthGross*fixedTax); 
+			document.getElementById('net').value = Math.round(monthNet);
+			
+			//update net slider
+			document.getElementById('sliderWithValueNet').value = Math.round(monthNet);
+			document.getElementById('sliderOutputNet').textContent = Math.round(monthNet);
+		}
+		
+		function calculateIncomeGross(){
+			months = document.querySelector('input[name="months"]:checked').value;
+			console.log(months);
+			const monthNetValue = document.getElementById('gross').value || 0;
+			console.log(monthNetValue);
+			
+			const slider = document.getElementById('sliderWithValueNet');
+			slider.value = monthNetValue;
+			const sliderOutputNet = document.getElementById('sliderOutputNet');
+			sliderOutputNet.textContent = monthNetValue; 
+			
+			const monthNet = monthNetValue + (monthGross*calculatedTax) - (monthGross*fixedTax);;
+			const index = until.findIndex(e => e-monthGross >= 0);
+			const calculatedTax = varTax[index];
+			console.log(calculatedTax);
+			const yearGross = monthGross * months; 
+			console.log(monthNet);
+			document.getElementById('gross').value = Math.round(yearGross);
+		}
+		
+		
+		// Find output DOM associated to the DOM element passed as parameter
+		function findOutputForSlider( element ) {
+		   var idVal = element.id;
+		   outputs = document.getElementsByTagName( 'output' );
+		   for( var i = 0; i < outputs.length; i++ ) {
+			 if ( outputs[ i ].htmlFor == idVal )
+			   return outputs[ i ];
+		   }
+		}
+
+		function getSliderOutputPosition( slider ) {
+		  // Update output position
+		  var newPlace,
+			  minValue;
+
+		  var style = window.getComputedStyle( slider, null );
+		  // Measure width of range input
+		  sliderWidth = parseInt( style.getPropertyValue( 'width' ), 10 );
+
+		  // Figure out placement percentage between left and right of input
+		  if ( !slider.getAttribute( 'min' ) ) {
+			minValue = 0;
+		  } else {
+			minValue = slider.getAttribute( 'min' );
+		  }
+		  var newPoint = ( slider.value - minValue ) / ( slider.getAttribute( 'max' ) - minValue );
+
+		  // Prevent bubble from going beyond left or right (unsupported browsers)
+		  if ( newPoint < 0 ) {
+			newPlace = 0;
+		  } else if ( newPoint > 1 ) {
+			newPlace = sliderWidth;
+		  } else {
+			newPlace = sliderWidth * newPoint;
+		  }
+
+		  return {
+			'position': newPlace + 'px'
+		  }
+		}
+
+		document.addEventListener( 'DOMContentLoaded', function () {
+		  // Get all document sliders
+		  var sliders = document.querySelectorAll( 'input[type="range"].slider' );
+		  [].forEach.call( sliders, function ( slider ) {
+			var output = findOutputForSlider( slider );
+			if ( output ) {
+			  if ( slider.classList.contains( 'has-output-tooltip' ) ) {
+				// Get new output position
+				var newPosition = getSliderOutputPosition( slider );
+
+				// Set output position
+				output.style[ 'left' ] = newPosition.position;
+			  }
+
+			  // Add event listener to update output when slider value change
+			  slider.addEventListener( 'input', function( event ) {
+				if ( event.target.classList.contains( 'has-output-tooltip' ) ) {
+				  // Get new output position
+				  var newPosition = getSliderOutputPosition( event.target );
+
+				  // Set output position
+				  output.style[ 'left' ] = newPosition.position;
+				}
+
+				// Update output with slider value
+				output.value = event.target.value;
+				
+				//Update gross text input
+				const grossInput = document.getElementById('gross');
+				grossInput.value = event.target.value;
+				calculateIncomeNet();
+			  } );
+			}
+		  } );
+		} );
+		
+		
+		
+		
+		
+		
+		//calculateIncome();
+	</script>
+</html>
