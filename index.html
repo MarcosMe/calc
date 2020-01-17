@@ -10,7 +10,7 @@
 	</head>
 	<body style="font-family: 'Roboto', sans-serif;">
 		<br>
-		<div class="columns is-centered is-mobile">
+		<div class="columns is-centered">
 			<div class="column is-half">
 				<div class="box">
 					<p class="subtitle has-text-centered">Escolha variáveis</p>
@@ -60,20 +60,20 @@
 								<div class="field">
 									<label class="label">€ Brutos por ano</label>
 									<div class="control has-text-centered">
-										<input class="input is-rounded" style="width:6.5em;" type="number" placeholder="€" id="gross"  min="0" max="360000" maxlength="6" oninput="calculateIncomeNet()">
+										<input class="input is-rounded" style="width:6.5em;" type="number" placeholder="€" id="gross"  min="0" max="360000" step="100" maxlength="6" oninput="calculateIncomeNet()">
 									</div>
 								</div>
 								<div class="field">
 									<label class="label">€ Liquidos por mês</label>
 									<div class="control has-text-centered">
-										<input class="input is-rounded" style="width:6em;" type="number" placeholder="€" id="net"   min="0" max="26000" maxlength="5" oninput="calculateIncomeGross()">
+										<input class="input is-rounded" style="width:6em;" type="number" placeholder="€" id="net"   min="0" max="26000" step="10" maxlength="5" oninput="calculateIncomeGross()">
 									</div>
 								</div>
 							</div>
 						</div>
 						<div class="field">
 							<div class="control">
-								<input class="input is-static is-readonly has-text-centered" id="grossAuxValues">
+								<input class="input is-static is-readonly has-text-centered" id="AuxValues">
 								</input>
 							</div>
 						</div>
@@ -116,7 +116,7 @@
 			document.getElementById('sliderOutputGross').textContent = yearGrossValue;
 			
 			//calculate taxes 
-			const monthGross = yearGrossValue / months;
+			const monthGross = Math.round(yearGrossValue / months);
 			const index = until.findIndex(e => e-monthGross >= 0);
 			const calculatedTax = varTax[index];
 			
@@ -125,7 +125,7 @@
 			document.getElementById('net').value = monthNet;
 			
 			//display auxiliar values
-			document.getElementById('grossAuxValues').value = Math.round(monthGross) + '€ brutos corresponde a ' + Math.round((calculatedTax*100)*100)/100 + '% IRS e a 11% SS';
+			document.getElementById('AuxValues').value = Math.round(monthGross) + '€ brutos corresponde a ' + Math.round((calculatedTax*100)*100)/100 + '% IRS e a 11% SS';
 			
 			//update net slider
 			document.getElementById('sliderWithValueNet').value = monthNet;
@@ -135,30 +135,34 @@
 		function calculateIncomeGross(){
 			//get months and net value
 			months = document.querySelector('input[name="months"]:checked').value;
-			console.log(months);
 			const monthNetValue = parseInt(document.getElementById('net').value) || 0;
-			console.log(monthNetValue);
 			
-			//update gross slider
+			//update net slider
 			document.getElementById('sliderWithValueNet').value = monthNetValue;
 			document.getElementById('sliderOutputNet').textContent = monthNetValue; 
 			
 			//calculate taxes
-			let monthGrossValue = 0;
+			let monthGross = 0;
 			if(monthNetValue < 654){
 				calculatedTax = 0;
-				monthGrossValue = monthNetValue + (monthNetValue*fixedTax);
-				console.log(monthNetValue*fixedTax);
-				
+				monthGross = monthNetValue + (((monthNetValue*fixedTax)/(1-fixedTax)));
 			}
 			else{
-				//index = until.findIndex(e => e-monthGross >= 0);
-				//monthGrossValue = monthNetValue + (monthNetValue*calculatedTax) + (monthNetValue*fixedTax);
+				//to do - get calculated tax
+				
 			
 			}
-			const yearGross = monthGrossValue * months; 
-			console.log(monthGrossValue);
-			document.getElementById('gross').value = yearGross;
+			//calculate year value and display it
+			const yearGross = monthGross * months; 
+			document.getElementById('gross').value = Math.round(yearGross);
+			
+			//display auxiliar values
+			document.getElementById('AuxValues').value = Math.round(monthGross) + '€ brutos corresponde a 0% IRS e a 11% SS';
+			
+			//update gross slider
+			document.getElementById('sliderWithValueGross').value = yearGross;
+			document.getElementById('sliderOutputGross').textContent = yearGross;
+			
 		}
 		
 		
@@ -227,13 +231,24 @@
 				  output.style[ 'left' ] = newPosition.position;
 				}
 
-				// Update output with slider value
-				output.value = event.target.value;
+				if(slider.id === "sliderWithValueGross"){
+					// Update output with slider value
+					output.value = event.target.value;
+					
+					//Update gross text input
+					document.getElementById('gross').value = event.target.value;
+					calculateIncomeNet();
+				}
 				
-				//Update gross text input
-				const grossInput = document.getElementById('gross');
-				grossInput.value = event.target.value;
-				calculateIncomeNet();
+				if(slider.id === "sliderWithValueNet"){
+					// Update output with slider value
+					output.value = event.target.value;
+					
+					//Update net text input
+					document.getElementById('net').value = event.target.value;
+					calculateIncomeGross();
+				}
+				
 			  } );
 			}
 		  } );
