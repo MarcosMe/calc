@@ -2,6 +2,7 @@
 <html>
 	<head>
 		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>Calculadora salário bruto e liquido</title>
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
 		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma-extensions@4.0.0/dist/css/bulma-extensions.min.css">
@@ -11,7 +12,7 @@
 	<body style="font-family: 'Roboto', sans-serif;">
 		<br>
 		<div class="columns is-centered">
-			<div class="column is-half">
+			<div class="column is-three-quarters">
 				<div class="box">
 					<p class="subtitle has-text-centered">Escolha variáveis</p>
 					<div class="control has-text-centered">
@@ -37,7 +38,7 @@
 								<option>Casado dois titulares - Deficiente</option>
 							</select>
 						</div>
-						
+						<div class="is-hidden-tablet"><br></div>
 						<div class="select is-rounded">
 							<select disabled>
 								<option disabled>Número de dependentes</option>
@@ -98,12 +99,10 @@
 	</body>
 	<script>
 		 
+		//define variables and initialize arrays with current values 
 		let months = 14;
-  
 		const until = [654.00,683.00,715.00,736.00,811.00,919.00,1001.00,1061.00,1139.00,1221.00,1317.00,1419.00,1557.00,1705.00,1864.00,1971.00,2083.00,2211.00,2359.00,2527.00,2758.00,3094.00,3523.00,4105.00,4636.00,5178.00,5862.00,6706.00,7915.00,9531.00,11248.00,18797.00,20160.00,22680.00,25200.00,71428.5];
-
 		const varTax = [0,0.002,0.044,0.074,0.083,0.105,0.117,0.125,0.136,0.146,0.157,0.167,0.178,0.192,0.206,0.216,0.226,0.236,0.246,0.256,0.266,0.279,0.295,0.307,0.325,0.335,0.345,0.365,0.375,0.395,0.405,0.415,0.425,0.433,0.443,0.453]
-		
 		const fixedTax = 0.11;
   
 		function calculateIncomeNet(){
@@ -143,122 +142,103 @@
 			
 			//calculate taxes
 			let monthGross = 0;
-			if(monthNetValue < 654){
-				calculatedTax = 0;
-				monthGross = monthNetValue + (((monthNetValue*fixedTax)/(1-fixedTax)));
-			}
-			else{
-				//to do - get calculated tax
-				
+			const index = varTax.findIndex(e => (monthNetValue + (((monthNetValue*(fixedTax+e))/(1-fixedTax-e))))  <= until[varTax.indexOf(e)]);
+			const calculatedTax = varTax[index];
+			monthGross = monthNetValue + (((monthNetValue*(fixedTax+calculatedTax))/(1-fixedTax-calculatedTax)));
 			
-			}
 			//calculate year value and display it
-			const yearGross = monthGross * months; 
-			document.getElementById('gross').value = Math.round(yearGross);
+			const yearGross = Math.round(monthGross * months); 
+			document.getElementById('gross').value = yearGross;
 			
 			//display auxiliar values
-			document.getElementById('AuxValues').value = Math.round(monthGross) + '€ brutos corresponde a 0% IRS e a 11% SS';
+			document.getElementById('AuxValues').value = Math.round(monthGross) + '€ brutos corresponde a ' + Math.round((calculatedTax*100)*100)/100 + '% IRS e a 11% SS';
 			
 			//update gross slider
 			document.getElementById('sliderWithValueGross').value = yearGross;
-			document.getElementById('sliderOutputGross').textContent = yearGross;
-			
+			document.getElementById('sliderOutputGross').textContent = yearGross;	
 		}
-		
 		
 		// Find output DOM associated to the DOM element passed as parameter
 		function findOutputForSlider( element ) {
-		   var idVal = element.id;
-		   outputs = document.getElementsByTagName( 'output' );
-		   for( var i = 0; i < outputs.length; i++ ) {
-			 if ( outputs[ i ].htmlFor == idVal )
-			   return outputs[ i ];
-		   }
+			var idVal = element.id;
+			outputs = document.getElementsByTagName( 'output' );
+			for( var i = 0; i < outputs.length; i++ ) {
+				if ( outputs[ i ].htmlFor == idVal ) return outputs[ i ];
+			}
 		}
 
 		function getSliderOutputPosition( slider ) {
-		  // Update output position
-		  var newPlace,
-			  minValue;
+			// Update output position
+			let newPlace, minValue;
 
-		  var style = window.getComputedStyle( slider, null );
-		  // Measure width of range input
-		  sliderWidth = parseInt( style.getPropertyValue( 'width' ), 10 );
+			const style = window.getComputedStyle( slider, null );
+			// Measure width of range input
+			sliderWidth = parseInt( style.getPropertyValue( 'width' ), 10 );
 
-		  // Figure out placement percentage between left and right of input
-		  if ( !slider.getAttribute( 'min' ) ) {
-			minValue = 0;
-		  } else {
-			minValue = slider.getAttribute( 'min' );
-		  }
-		  var newPoint = ( slider.value - minValue ) / ( slider.getAttribute( 'max' ) - minValue );
+			// Figure out placement percentage between left and right of input
+			if ( !slider.getAttribute( 'min' ) ) {
+				minValue = 0;
+			} else {
+				minValue = slider.getAttribute( 'min' );
+			}
+			const newPoint = ( slider.value - minValue ) / ( slider.getAttribute( 'max' ) - minValue );
 
-		  // Prevent bubble from going beyond left or right (unsupported browsers)
-		  if ( newPoint < 0 ) {
-			newPlace = 0;
-		  } else if ( newPoint > 1 ) {
-			newPlace = sliderWidth;
-		  } else {
-			newPlace = sliderWidth * newPoint;
-		  }
+			// Prevent bubble from going beyond left or right (unsupported browsers)
+			if ( newPoint < 0 ) {
+				newPlace = 0;
+			} else if ( newPoint > 1 ) {
+				newPlace = sliderWidth;
+			} else {
+				newPlace = sliderWidth * newPoint;
+			}
 
-		  return {
-			'position': newPlace + 'px'
-		  }
+			return {
+				'position': newPlace + 'px'
+			}
 		}
 
 		document.addEventListener( 'DOMContentLoaded', function () {
-		  // Get all document sliders
-		  var sliders = document.querySelectorAll( 'input[type="range"].slider' );
-		  [].forEach.call( sliders, function ( slider ) {
-			var output = findOutputForSlider( slider );
-			if ( output ) {
-			  if ( slider.classList.contains( 'has-output-tooltip' ) ) {
-				// Get new output position
-				var newPosition = getSliderOutputPosition( slider );
+			// Get all document sliders
+			const sliders = document.querySelectorAll( 'input[type="range"].slider' );
+			[].forEach.call( sliders, function ( slider ) {
+				const output = findOutputForSlider( slider );
+				if ( output ) {
+					if ( slider.classList.contains( 'has-output-tooltip' ) ) {
+						// Get new output position
+						var newPosition = getSliderOutputPosition( slider );
+						// Set output position
+						output.style[ 'left' ] = newPosition.position;
+					}
 
-				// Set output position
-				output.style[ 'left' ] = newPosition.position;
-			  }
+					// Add event listener to update output when slider value change
+					slider.addEventListener( 'input', function( event ) {
+						if ( event.target.classList.contains( 'has-output-tooltip' ) ) {
+						// Get new output position
+						var newPosition = getSliderOutputPosition( event.target );
+						// Set output position
+						output.style[ 'left' ] = newPosition.position;
+						}
 
-			  // Add event listener to update output when slider value change
-			  slider.addEventListener( 'input', function( event ) {
-				if ( event.target.classList.contains( 'has-output-tooltip' ) ) {
-				  // Get new output position
-				  var newPosition = getSliderOutputPosition( event.target );
-
-				  // Set output position
-				  output.style[ 'left' ] = newPosition.position;
-				}
-
-				if(slider.id === "sliderWithValueGross"){
-					// Update output with slider value
-					output.value = event.target.value;
+						if(slider.id === "sliderWithValueGross"){
+							// Update output with slider value
+							output.value = event.target.value;	
+							//Update gross text input
+							document.getElementById('gross').value = event.target.value;
+							calculateIncomeNet();
+						}
 					
-					//Update gross text input
-					document.getElementById('gross').value = event.target.value;
-					calculateIncomeNet();
-				}
-				
-				if(slider.id === "sliderWithValueNet"){
-					// Update output with slider value
-					output.value = event.target.value;
+						if(slider.id === "sliderWithValueNet"){
+							// Update output with slider value
+							output.value = event.target.value;
+							
+							//Update net text input
+							document.getElementById('net').value = event.target.value;
+							calculateIncomeGross();
+						}
 					
-					//Update net text input
-					document.getElementById('net').value = event.target.value;
-					calculateIncomeGross();
+					});
 				}
-				
-			  } );
-			}
-		  } );
-		} );
-		
-		
-		
-		
-		
-		
-		//calculateIncome();
+			});
+		});
 	</script>
 </html>
